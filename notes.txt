@@ -533,19 +533,24 @@ jenkins password
 5) Jenkins URL:	
 http://ec2-3-110-219-73.ap-south-1.compute.amazonaws.com:8080/
 
+
+NOTE:- Agar aapke mobile par Jenkins dashboard open ho raha hai aur login credential maanga hai, iska matlab
+hai ki aapka Jenkins server publicly accessible hai. Ye indicate karta hai ki aapne Jenkins ko sahi tarah se 
+configure kiya hai aur server internet se accessible hai.
+
 The Jenkins URL is used to provide the root URL for absolute links to various Jenkins resources. That means
 this value is required for proper operation of many Jenkins features including email notifications, PR status 
 updates, and the BUILD_URL environment variable provided to build steps.
 The proposed default value shown is not saved yet and is generated from the current request, if possible. The
 best practice is to set this value to the URL that users are expected to use. This will avoid confusion when
- sharing or viewing links.
+sharing or viewing links.
 
 
 6) Logs dekhne ke liye
  docker logs jenkins
 
 
-NOTES:-
+NOTES:- 
 Jenkins terminal pe command not found error aa raha hai kyunki hum Jenkins ko directly Ubuntu system par install
 nahi kar rahe hain; hum Jenkins ko Docker container ke andar run kar rahe hain. Docker container ke andar 
 Jenkins run kar raha hai, isi liye Ubuntu terminal mein Jenkins commands directly accessible nahi hain.
@@ -555,7 +560,7 @@ Clarification:
 -> Is wajah se terminal mein Jenkins ka version check nahi ho raha hai.
 -> Container ke andar hi Jenkins run ho raha hai, jo Docker ke isolation feature ke wajah se Ubuntu system se alag hai.
 
-STEP 5:-
+STEP 5:- "Jenkins User ID: SyedSaab1303"
 
 Jenkins dashboard access ho gaya hai, iska matlab Jenkins successfully setup ho chuka hai. Ab next step hai 
 Jenkins pipeline setup karna, jo ki automate deployment ke liye bahut important hai. Main tumhe step-by-step 
@@ -586,15 +591,169 @@ Source Code Management section mein "Git" option select karo.
 Repository URL mein apne GitHub repo ka URL daalo jahan tumhara project code hai.
 Agar repo private hai, to credentials bhi add karne honge. "Add" button se GitHub credentials add karo.
 
-6) Build Triggers (Optional):
 
-Build Triggers section mein "GitHub hook trigger for GITScm polling" check kar sakte ho agar tumhe GitHub se automate build chahiye jab bhi code push ho.
 
-7) Pipeline Section:
+The **Source Code Management (Git)** section Jenkins me tab dikhega jab tum ek new pipeline ya freestyle job 
+setup kar rahe ho. Is section ka use Jenkins ko batane ke liye hota hai ki source code ko kahan se pull karna
+hai, jaise ki GitHub repository se. Yaha par steps diye gaye hain ki tumhe ye section kahan milega aur kaise 
+use karoge:
 
-Pipeline section mein, "Pipeline script" option select karo.
+1. **Jenkins Dashboard Access Karo:**
+   - Jenkins server ka URL open karo, example: `http://<your-server-ip>:8080`.
+   - Login karo agar required ho.
 
-8) Definition: "Pipeline script from SCM" ko select karo agar pipeline script (Jenkinsfile) Git repo mein hai, otherwise "Pipeline script" select karo aur direct likh sakte ho.
+2. **New Item Create Karo:**
+   - Jenkins dashboard par left side me "New Item" par click karo.
+   - Ek prompt open hoga jisme tumhe apne job ka naam dena hoga.
+
+3. **Job Type Select Karo:**
+   - Tum "Pipeline" ya "Freestyle Project" select kar sakte ho, depending on your needs. 
+   - "Freestyle Project" beginner-friendly hai, isiliye hum isko consider karte hain.
+
+4. **Freestyle Project Select Karo:**
+   - Freestyle Project ka naam likhne ke baad "OK" par click karo.
+
+5. **Job Configuration Page:**
+   - "Job Configuration" page open ho jayega. Isme multiple sections milenge.
+
+6. **Source Code Management Section:**
+   - Configuration page par neeche scroll karo jab tak tumhe **"Source Code Management"** section na mil jaye. 
+   - Default option "None" selected hoga.
+
+7. **Git Select Karo:**
+   - "Source Code Management" section me **"Git"** option select karo.
+   - Agar "Git" option nahi dikh raha, iska matlab Jenkins me Git plugin install nahi hai. Plugin Manager me jaakar "Git Plugin" install kar lo.
+
+8. **Repository URL Enter Karo:**
+   - "Repository URL" me apne GitHub repository ka URL paste karo jisme tumhara source code hosted hai. 
+   - Example: `https://github.com/username/repository-name.git`.
+
+9. **Credentials Add Karo (Agar Private Repo Hai):**
+   - Agar repository private hai, to tumhe credentials add karne honge.
+   - **"Add"** button se credentials add karo aur Jenkins ko batado ki GitHub access kaise karna hai.
+
+10. **Branch Specify Karo (Optional):**
+    - Agar tum specific branch ko build karna chahte ho, to branch name specify kar sakte ho jaise `main`, `frontend`, `backend`, etc.
+
+
+Github personal access token:- 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
+
+
+GitHub ke private repository ko Jenkins se connect karne ke liye tumhe credentials ya SSH key setup karni hoti
+hai. Is setup se Jenkins ko permission mil jati hai private repo se code pull karne ki
+
+
+Method 1: GitHub Credentials Setup in Jenkins
+
+A) GitHub Personal Access Token Generate Karo:
+    -> GitHub account me login karo.
+    -> Top right corner me profile icon par click karo, phir "Settings" par click karo.
+    -> Left sidebar me, "Developer settings" par click karo.
+    -> "Personal access tokens" par click karo, phir "Tokens (classic)" section me "Generate new token" par 
+        click karo.
+    -> Token name: Koi bhi naam de sakte ho, jaise "Jenkins Access".
+    -> Expiration: Choose karo jab tak token valid rahe, e.g., 30 days, no expiration, etc.
+    -> Scopes: Minimum scopes ke liye repo scope select karo (repo access ke liye).
+    -> Generate Token: "Generate token" button par click karo aur generated token ko safe jagah save kar lo.\
+       Ye token sirf abhi dikh raha hai.
+
+B) Jenkins me Credentials Add Karo:
+
+    -> Jenkins Dashboard open karo aur "Manage Jenkins" par click karo.
+    -> "Manage Credentials" par click karo.
+    -> "(global)" domain par click karo, fir "Add Credentials" button par click karo.
+    -> Kind: "Username with password" select karo.
+    -> Username: Tumhara GitHub username daalo.
+    -> Password: GitHub Personal Access Token paste karo jo abhi generate kiya tha.
+    -> ID: ID optional hai, blank chhodo ya kuch recognizable daal do.
+    -> Description: Example: "GitHub Token for Jenkins".
+    -> Save par click karo.
+
+C) Credentials Job Configuration Me Use Karo:
+
+    -> Job configuration page par jao jahan tumne "Source Code Management (Git)" section setup kiya tha.
+    -> Credentials dropdown se apne newly added credentials select karo.
+    
+ 
+
+
+6) Build Triggers: Decide karte hain ki build kaise trigger hoga (e.g., SCM poll ya manually).
+
+7) Build Environment: Special environment setup agar required ho to.
+
+8) Build Steps: Most important section, yaha tum commands likhte ho code ko build karne ke liye.
+
+9) Post-build Actions: Notifications ya build results ko handle karne ke liye.
+
+10) Pipeline Section:
+    -> Pipeline section mein, "Pipeline script" option select karo.
+    -> Definition: "Pipeline script from SCM" ko select karo agar pipeline script (Jenkinsfile) Git repo mein 
+       hai, otherwise "Pipeline script" select karo aur direct likh sakte ho.
+
+
+
+NOTE:- Agar aapke mobile par Jenkins dashboard open ho raha hai aur login credential maanga hai, iska matlab hai ki 
+aapka Jenkins server publicly accessible hai. Ye indicate karta hai ki aapne Jenkins ko sahi tarah se 
+configure kiya hai aur server internet se accessible hai.
+
+
+// Kya Hota Hai Agar Pipeline Script Nahi Likha?
+Agar tum pipeline script nahi likhte ya usko SCM se link nahi karte, to Jenkins ko pata nahi chalega ki tumhara
+build, test, aur deploy ka process kaise handle karna hai. Isliye Pipeline script likhna zaroori hota hai 
+Jenkins me automate build/test/deploy karne ke liye.
+
+-------------------------------------------------------------------------------------------
+
+VS Code se apna code GitHub branch me push karne ke liye tumhe steps follow karne padenge.
+
+Scenario 1: Single Repository for Both Frontend and Backend
+
+Step 1: Create a Single Repository on GitHub :- GitHub par jao aur "New Repository" par click karo.
+
+Step 2: Clone the Repository in VS Code
+git clone https://github.com/username/chat-application.git
+Isse tumhara GitHub repository local machine par clone ho jayega.
+
+Step 3: Copy Your Project Code to the Cloned Folder
+
+"Copy Your Project Code to the Cloned Folder" ka matlab hai ki tum apne existing project code ko us folder me
+ move ya copy karoge jo tumne GitHub se clone kiya hai. Ye steps follow karo:
+
+Step a: Locate Your Project Folder
+
+Apne computer par jaha tumhara existing project code (frontend aur backend) pada hai, us folder ko locate karo.
+Example: Agar tumhara project code D:/MyProjects/ChatApp me hai, to us folder ko open karo.
+
+Step b: Open the Cloned Folder
+Ye woh folder hoga jo tumne GitHub se clone kiya tha.
+Example: Agar tumne chat-application naam se clone kiya tha, to ye folder C:/Users/YourName/chat-application me hoga.
+
+Step c: Copy Project Code
+Step d: Paste into Cloned Folder
+Step e: Verify the Copy
+
+
+
+Step 4: Initialize Git in Your Project (If Not Already Initialized)
+git init
+
+All Files ko Git mein Add karo:
+git add .
+
+Initial Commit karo:
+git commit -m "Initial commit"
+
+Step 5: Link Local Repository with Remote GitHub Repository
+git remote add origin https://github.com/username/chat-application.git
+
+Step 6: Push Code to GitHub
+Branch create karo (if not on main or master):
+git branch -M main
+
+Code ko GitHub par Push karo:
+git push -u origin main
+
+---------------------------------------------------------------------
 
 
 
