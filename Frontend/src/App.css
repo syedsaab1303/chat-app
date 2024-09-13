@@ -1,0 +1,36 @@
+/* App.css */
+.app-header {
+  background-color: #007bff;
+  color: white;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-header h1 {
+  margin: 0;
+}
+
+.app-header nav a {
+  color: white;
+  margin: 0 10px;
+  text-decoration: none;
+}
+
+.app-header nav a:hover {
+  text-decoration: underline;
+}
+
+.app-header button {
+  background-color: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.app-header button:hover {
+  text-decoration: underline;
+}
+

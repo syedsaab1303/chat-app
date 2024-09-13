@@ -1,0 +1,26 @@
+/* Home.css */
+
+.home-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.home-title {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 2em; /* Example to make the title more prominent */
+}
+
+.home-links {
+    margin-top: 20px;
+}
+
+.home-links a {
+    margin-right: 10px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+.home-links a:hover {
+    text-decoration: underline;
+}
