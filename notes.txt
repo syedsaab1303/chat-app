@@ -862,6 +862,20 @@ npm run build
 
 Save Configuration: Job ko save karein.
 
+/* Agar aapka Frontend folder Backend ke andar nahi hai, to aapko parent directory (..) me navigate karna padega.
+# Backend Build
+cd Backend
+npm install
+# Navigate back to root directory
+cd ..
+# Frontend Build
+cd Frontend
+npm install
+npm run build
+*/
+
+
+
 9) Post-build Actions: Notifications ya build results ko handle karne ke liye isme 2 method use kr skte hai:- 
 
 1) Artifacts Archive (Optional):
@@ -889,6 +903,66 @@ deploy kar sakte hain.
 
 Jenkins build artifacts ko archive karne ke baad deploy karne ke liye, aap AWS EC2 instance ya kisi bhi 
 hosting environment pe deploy kar sakte hain.
+
+
+
+npm: not found Error:
+Yeh error tab aata hai jab Jenkins job ke environment me npm (Node Package Manager) installed nahi hota.
+Jenkins ko npm commands run karne ke liye Node.js aur npm installed hona chahiye.
+
+
+Solution:
+Ensure Node.js and npm are Installed:
+
+Aapko Jenkins ke Docker container me Node.js aur npm install karna hoga. Agar aap Jenkins ko Docker se run kar rahe hain, to aapko Dockerfile ya Jenkins ke container me manually Node.js install karna padega.
+
+Steps to Install Node.js in Jenkins Docker Container:
+jenkins-container-name is jenkins
+# Jenkins container ke andar bash terminal open karein
+docker exec -it <jenkins-container-name> bash          
+
+# Node.js aur npm install karne ke liye yeh commands run karein
+curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+apt-get install -y nodejs
+
+# Verify Node.js aur npm install ho gaye hain
+node -v
+npm -v
+
+
+YE ABOVE COMMAND ROOT ME HI RUN KREGE
+
+
+
+QUESTION:- ye command "curl -fsSL https://deb.nodesource.com/setup_16.x | bash -" run krne ke baad ye  error aa rha hai
+  "E: List directory /var/lib/apt/lists/partial is missing. - Acquire (13: Permission denied) 
+2024-09-15 20:16:31 - Error: Failed to run 'apt-get update' (Exit Code: 0)" 
+ANSWER:- Yeh error permission issue ke wajah se aa raha hai. Aap Jenkins Docker container ke andar commands
+run kar rahe hain, lekin aapko root privileges ki zarurat hai taaki apt-get update aur apt-get install 
+commands execute ho sakein. Is issue ko solve karne ke liye, aapko root user ke under commands run karne 
+padenge.
+docker exec -it -u root <jenkins-container-name> bash
+
+
+QUESTION:- abhi me  putty me jenkins ke andar hu jenkins@dcf3df937367:/$ isse kaise bahar aau ubuntu me?
+ANSWER:- exit
+
+NOTE:-
+Haan, agar aap root user ke through Jenkins Docker container me Node.js aur npm install kar lete hain, to
+aapko baar-baar ye commands run karne ki zaroorat nahi padegi.
+
+A) Once Installed, Always Available:
+Ek baar aap Node.js aur npm Jenkins Docker container me install kar lete hain, to wo system me tab tak 
+available rahenge jab tak container running hai.
+Aapke Jenkins jobs me ab npm commands directly run ho payengi bina kisi permission issue ke.
+
+B) Container Restart Karne Ke Baad:
+Agar aapka Docker container restart hota hai, tab bhi Node.js aur npm wahan installed hi rahenge, kyunki
+aapne unhe container ke andar install kiya hai.
+Note: Agar aap container delete karte hain aur naya Jenkins container create karte hain, tab aapko
+ye installation commands phir se run karni padengi.
+
+
 
 2) Notifications (Optional)
 maine Extended E-mail Notification me SMTP server, SMTP Port then advanced option me credentials fill kra
@@ -976,7 +1050,7 @@ lts: Pulling from jenkins/jenkins
 903681d87777: Pull complete
 
 ubuntu@ip-172-31-4-63:~$ docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
-04b04d0033fa41caabbe402683dd739a
+9834380a6dec4c139be28ba7b830aeb5  ( ye password change  hote rhega jb jb jenkins docker se remove krke dubara install krege)
 
 jenkins@5b021048d0fc:/$
 
@@ -1034,12 +1108,52 @@ git push -u origin main
 
 ---------------------------------------------------------------------
 
+NOTES
 
+Jenkins aapke EC2 instance par ek application ke roop mein run ho raha hota hai. Jab hum keh rahe hain 
+"server (EC2 instance) ke operating system ko modify karengi," to iska matlab hai ki hum wo commands run 
+kar rahe hain jo aapke EC2 instance ke operating system (jaise Ubuntu) par directly effect daalengi.
 
+### Jenkins aur EC2 Instance:
 
+1. **EC2 Instance:**
+   - EC2 (Elastic Compute Cloud) instance ek virtual server hai jo AWS (Amazon Web Services) ke cloud me run
+     hota hai.
+   - Ye server aapke operating system, files, aur applications ko host karta hai. 
 
+2. **Jenkins:**
+   - Jenkins ek continuous integration (CI) tool hai jo aapke EC2 instance par install hota hai aur run 
+     karta hai.
+   - Jenkins ka role hai build automation, test automation, aur deployment automation manage karna.
 
+### Kaise Pata Karein Ki Jenkins Kaunse Server Par Run Ho Raha Hai?
 
+1. **EC2 Instance me Jenkins Installation:**
+   - Jab aap Jenkins install karte hain, to wo aapke EC2 instance par install hota hai. Jenkins ko ek
+     service ke roop me run karte hain, jo aapke EC2 instance ke operating system ke resources ko use karta
+     hai.
 
+2. **Checking Jenkins:**
+   - Agar aap Jenkins ko access kar rahe hain web browser se, to aap usually `http://<your-ec2-public-ip>:8080`
+     par Jenkins dashboard ko dekh sakte hain.
+   - Ye IP address aapka EC2 instance ka public IP hai, jahan Jenkins run kar raha hai.
+
+3. **Jenkins Configuration and Build Steps:**
+   - Jenkins build steps aapke code ko build karne ke liye hain aur yeh build steps EC2 instance ke operating
+     system me execute hote hain. 
+   - Jab aap build steps me commands likhte hain (jaise `npm install` aur `npm run build`), to yeh commands
+     Jenkins ke environment me execute hoti hain, jo EC2 instance ke operating system ke resources ko use
+     karte hain.
+
+Iska matlab hai ki aapko Jenkins build steps ko configure karte waqt ensure karna hoga ki aapka EC2 instance 
+(jahan Jenkins run ho raha hai) sahi tarah se setup hai, aur saare necessary tools aur dependencies install
+ hain.
+-----------------------
+
+Question:- ye  command 'docker run -d -p 8080:8080 -p 50000:50000 --name jenkins jenkins/jenkins:lts' ke baad ye output
+ me mila "dcf3df937367c667cbf195909d2092dca7f9d0d007115ca989e6b71e955aa551"
+
+ANSWER:- the output you received (dcf3df937367c667cbf195909d2092dca7f9d0d007115ca989e6b71e955aa551) is the unique ID of the
+Jenkins container that was just created. This means Jenkins is now running in a Docker container with this ID.
 
 
