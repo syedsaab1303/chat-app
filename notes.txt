@@ -314,6 +314,29 @@ ForgotPasswordPage.js me krege
 
 
 ------------------------------------------------*************************************------------------------------------------------------
+"""
+VIMP NOTES:-
+After all configuration of docker and jenkins 
+Command to start Docker and Jenkins from putty
+
+login as: ubuntu
+kuch authentification ka  btayege then,
+
+ubuntu@ip-172-31-4-63:~$ sudo systemctl start docker
+ubuntu@ip-172-31-4-63:~$ sudo systemctl enable docker
+
+Synchronizing state of docker.service with SysV service script with /usr/lib/sys                                                                                        temd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable docker
+
+ubuntu@ip-172-31-4-63:~$ docker start jenkins
+jenkins
+
+ubuntu@ip-172-31-4-63:~$ docker ps
+CONTAINER ID   IMAGE                 COMMAND                  CREATED      STATU                                                                                        S         PORTS                                                                                                                                                                              NAMES
+5b021048d0fc   jenkins/jenkins:lts   "/usr/bin/tini -- /u…"   3 days ago   Up 9                                                                                         seconds   0.0.0.0:8080->8080/tcp, :::8080->8080/tcp, 0.0.0.0:50000->50000/tcp, :                                                                                        ::50000->50000/tcp   jenkins
+
+status up means jenkins work kr rha  hai fir jenkins ko browser se open krna hai.
+"""
 
 // Connection between Docker, Jenkins, and Kubernetes:
 
@@ -418,6 +441,19 @@ Ye commands tumhare instance ko update aur upgrade karengi taake latest security
 updates install ho sakein.
 
 
+/*
+NOTES:- Sudo apt install docker.io command sirf ek baar run karni hoti hai. Yeh Docker ko aapke EC2 instance 
+        (ya server) pe install karne ke liye ha
+// Docker Installation Details:
+Jab aap yeh command run karte ho, to Docker package aapke system me install ho jata hai. Ek baar install ho
+jane ke baad, aapko Docker ko fir se install karne ki zarurat nahi padegi, jab tak aap apne system ya instance
+ko reset nahi karte.
+
+Aapko sirf ek baar Docker ko install karna padega. Jab bhi aap Putty ke through apne instance pe login karenge,
+Docker pehle se installed hoga, aur aap Docker commands directly use kar sakte hain.
+*/
+
+
 Step 3:- 
 1) Install Docker: Docker ko install karne ke liye, pehle package dependencies ko install karo:
 sudo apt install apt-transport-https ca-certificates curl software-properties-common -y
@@ -493,16 +529,47 @@ sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary' > /etc/apt/sour
 sudo apt update
 sudo apt install jenkins -y
 
+
+"NOTE:-Agar pehle Jenkins Docker ke through install ho chuka hai aur Docker service enable ho gayi hai, to 
+Jenkins ko dubara install karne ki zarurat nahi hai. Ab Jenkins ko bas start karna hoga
+docker start jenkins
+Phir check karo ki Jenkins chal raha hai ya nahi:
+docker ps 
+Agar Jenkins container chal raha hoga, to uska status "Up" dikhai dega
+ Iske baad tum apne Jenkins dashboard ko access kar sakte ho using the URL:
+http://<EC2_Instance_IP>:8080/
+Tumhara EC2 instance ka public IP ya DNS address tumhe AWS Management Console me mil sakta hai. 
+AWS EC2 instance ka public IP address ya DNS naam generally change nahi hota hai, jab tak tum instance
+ko stop aur start nahi karte ho. Lekin kuch situations me ye address change ho sakta hai:
+Stop and Start Instance:
+Reboot Instance:
+Elastic IP (EIP): Tum elastic IP address allocate kar sakte ho, jo static hota hai aur tumhare instance ke
+saath bind ho sakta hai. Isse IP address change nahi hota, aur tumhare Jenkins URL hamesha same rahega.
+
+
+"
+
+
 3) Jenkins service ko start karo aur ensure karo ki yeh boot ke time automatically start ho:
 
 sudo systemctl start jenkins
 sudo systemctl enable jenkins
+
+
 
 4) Jenkins version check karne ke liye:
 
 jenkins --version
 
 ---------------------------------------------------------------------------------------------------------------
+Jenkins NOTE:-
+a) Pipeline Script: Yeh step pipeline configuration me aati hai aur yahan aap frontend aur backend dono ke 
+   stages define kar sakte hain.
+
+b) Freestyle Project: Yahan aapko build steps manually configure karni hoti hain aur alag-alag commands add 
+   karni hoti hain.
+
+Hm Freestyle porject pr work kr rhe jenkins me
 
 Step 4:-
 Jenkins Install Using Docker:
@@ -679,16 +746,163 @@ C) Credentials Job Configuration Me Use Karo:
 
 6) Build Triggers: Decide karte hain ki build kaise trigger hoga (e.g., SCM poll ya manually).
 
+GitHub hook trigger for GITScm polling ko Jenkins mein setup karne ka purpose ye hota hai ki jab bhi tum apne
+GitHub repository mein koi commit ya push karte ho, Jenkins ko automatically notify kar diya jaye aur Jenkins
+build start kar de. Ye setup karne ke liye tumhe GitHub aur Jenkins ke beech Webhooks setup karne hote hain.
+
+Chalo step by step dekhein kaise `GitHub hook trigger for GITScm polling` setup karte hain.
+
+### **Step 1: Jenkins Configuration for GitHub Webhooks**
+
+1. **Install Git Plugin (if not already installed):**
+   - Jenkins dashboard par jao.
+   - **Manage Jenkins** > **Manage Plugins** mein jao.
+   - **Available** tab mein search karo "Git plugin" aur usse install kar lo agar pehle se installed nahi hai.
+
+2. **Go to Your Jenkins Job:**
+   - Apne Jenkins dashboard par apne project/job par click karo.
+   - **Configure** par click karo.
+
+3. **Select SCM (Source Code Management):**
+   - Source Code Management section mein **Git** select karo.
+   - **Repository URL** mein apne GitHub repo ka URL daalo.
+   - Apne credentials add karo agar tumhara repo private hai.
+
+4. **Enable GitHub Hook Trigger:**
+   - Scroll down to **Build Triggers**.
+   - **GitHub hook trigger for GITScm polling** ko select karo.
+   
+   Iska matlab ye hai ki jab bhi GitHub par koi commit ya push hota hai, to Jenkins webhook ke zariye notify 
+   ho jata hai aur build trigger hota hai.
+
+---
+
+### **Step 2: Set Up Webhook in GitHub**
+
+1. **Go to Your GitHub Repository:**
+   - GitHub par apne project repository page par jao.
+
+2. **Settings > Webhooks:**
+   - Repository page ke right side mein **Settings** tab par click karo.
+   - Left sidebar mein **Webhooks** par click karo.
+
+3. **Add a Webhook:**
+   - **Add webhook** button par click karo.
+
+4. **Webhook Settings:**
+   - **Payload URL:** Ye URL tumhare Jenkins server ka URL hoga, jisme `/github-webhook/` bhi add karna hai.
+     - Example: `http://<Jenkins-Server-URL>/github-webhook/`
+     - Agar tumhara Jenkins server localhost par chal raha hai aur publicly accessible nahi hai, to tumhe 
+       Jenkins ko public karne ke liye tools jaise **ngrok** use karna padega.
+   
+   - **Content type:** Isko `application/json` set karo.
+
+   - **Which events would you like to trigger this webhook?**
+     - Select **Just the push event**.
+
+5. **Save the Webhook:**
+   - **Add webhook** button click karke webhook save kar do.
+
+---
+
+### **Step 3: Testing the Webhook**
+
+1. GitHub repository mein koi new commit ya change karo aur push karo.
+2. Ab Jenkins automatically notify hoga aur webhook trigger hote hi build start kar dega.
+
+---
+
+### **Step 4: Verify Jenkins Build Trigger**
+
+1. Jenkins dashboard par jaake dekho ki build automatically start hua ya nahi.
+2. Agar build trigger ho gaya, to `Build History` mein latest build dikhna chahiye.
+
+---
+
+### **Important Notes:**
+
+- Ensure that Jenkins server is publicly accessible if GitHub cannot directly communicate with a local server.
+  - Agar Jenkins local machine pe chal raha hai aur public internet se access nahi hai, to **ngrok** jaisa tool use karo.
+  
+- Webhook mein `/github-webhook/` path correct hona chahiye, aur GitHub settings mein webhook ka `Payload URL` properly 
+  configured hona chahiye.
+
+---
+
 7) Build Environment: Special environment setup agar required ho to.
 
 8) Build Steps: Most important section, yaha tum commands likhte ho code ko build karne ke liye.
 
-9) Post-build Actions: Notifications ya build results ko handle karne ke liye.
+Jenkins mein frontend aur backend ke build commands ko ek hi file mein ya alag-alag files mein handle karna
+dono options available hain. Lekin generally, build steps ko ek hi pipeline script ya job mein manage karna 
+zyada convenient aur organized hota hai, especially jab dono frontend aur backend code same repository mein ho.
 
-10) Pipeline Section:
-    -> Pipeline section mein, "Pipeline script" option select karo.
-    -> Definition: "Pipeline script from SCM" ko select karo agar pipeline script (Jenkinsfile) Git repo mein 
-       hai, otherwise "Pipeline script" select karo aur direct likh sakte ho.
+Option 1: Single Jenkins Freestyle Job
+Agar aap ek hi Freestyle job mein dono frontend aur backend ke build steps handle karna chahte hain, to aap
+Build Steps section mein dono sets of commands ko sequentially add kar sakte hain. Ye process step-by-step yeh hai:
+
+a) Freestyle Job Configuration:
+
+Source Code Management: Git repository URL aur credentials provide karein.
+Build Triggers: GitHub hook trigger ya SCM polling select karein.
+Build Environment: Default settings ko use karein, ya additional configurations add karein.
+Build Steps:
+
+Add Build Step: Execute shell ko select karein.
+
+# Backend Build
+cd Backend
+npm install
+npm run build  # Ye command optional hai agar build step define hai
+
+# Frontend Build
+cd Frontend
+npm install
+npm run build
+
+Save Configuration: Job ko save karein.
+
+9) Post-build Actions: Notifications ya build results ko handle karne ke liye isme 2 method use kr skte hai:- 
+
+1) Artifacts Archive (Optional):
+-> Backend ke Node.js project ke liye, build step usually necessary nahi hoti, kyunki Node.js applications 
+ko typically directly run kiya jata hai bina build step ke
+-> Jenkins build step ke dauran Backend/dist/** aur chatterbox-frontend/build/** folders ko fetch nahi karega,
+balki yeh folders build process ke dauran create kiye jayenge.
+
+// Local Build vs. Jenkins Build:
+    -> Local Build: Local environment me build banane se aap code ko manually test kar sakte hain aur verify 
+       kar sakte hain ki build process sahi se chal rahi hai.
+    -> Jenkins Build: Jenkins aapke build commands ko automate karke execute karta hai. Jenkins build commands
+       ko run karke build artifacts generate karta hai aur unhe archive kar sakta hai.
+
+-> No Need to Push Build to GitHub:
+-> Verify Jenkins Build: Jenkins job run karne ke baad, Jenkins ke build artifacts section me jaake check 
+   karein ki build artifacts properly archive hue hain ya nahi.
+
+hme build folders ko GitHub me push nahi karna hai, Jenkins ko iski chinta nahi hai. Jenkins apne build
+process ke dauran yeh folders generate, create karega aur unko archive karega isliye GitHub me yeh folders
+available nahi hone chahiye
+
+Frontend build output ko aap AWS S3 bucket, AWS EC2 instance, ya kisi bhi static file hosting service par
+deploy kar sakte hain.
+
+Jenkins build artifacts ko archive karne ke baad deploy karne ke liye, aap AWS EC2 instance ya kisi bhi 
+hosting environment pe deploy kar sakte hain.
+
+2) Notifications (Optional)
+maine Extended E-mail Notification me SMTP server, SMTP Port then advanced option me credentials fill kra
+than E-mail Notification section me SMTP server fill kra then advanced option me Use SMTP Authentication me 
+User Name Password Use TLS pr tick SMTP Port and Reply-To Address fill kra then Test configuration by sending
+test e-mail ko tick krke Test e-mail recipient me apna email fill krke test configuration kra isi ke saath 
+saath Add Post-Build Action me Email Notification select kra aur recipients me email fill krke  Send separate
+e-mails to individuals who broke the build  and Send e-mail for every unstable build pr tick kr diya
+
+
+
+
+
+
 
 
 
@@ -702,7 +916,72 @@ Agar tum pipeline script nahi likhte ya usko SCM se link nahi karte, to Jenkins 
 build, test, aur deploy ka process kaise handle karna hai. Isliye Pipeline script likhna zaroori hota hai 
 Jenkins me automate build/test/deploy karne ke liye.
 
--------------------------------------------------------------------------------------------
+
+-------------------------------
+// yha btaya gya hai ki kaise hmne putty me docker install kra and setup and enable kra and docker me jenkins 
+ install and enable kra.
+
+
+ubuntu@ip-172-31-4-63:~$ sudo apt install apt-transport-https ca-certificates curl software-properties-common -y
+Reading package lists... Done
+
+ubuntu@ip-172-31-4-63:~$ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+ubuntu@ip-172-31-4-63:~$ sudo apt update
+
+ubuntu@ip-172-31-4-63:~$ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 7EA0A9C3F273FCD8
+
+Warning: apt-key is deprecated. Manage keyring files in trusted.gpg.d instead (see apt-key(8)).
+
+ubuntu@ip-172-31-4-63:~$ sudo apt update
+
+ubuntu@ip-172-31-4-63:~$ sudo apt install docker-ce -y
+Reading package lists... Done
+
+ubuntu@ip-172-31-4-63:~$ sudo systemctl start docker
+ubuntu@ip-172-31-4-63:~$ sudo systemctl enable docker
+
+Executing: /usr/lib/systemd/systemd-sysv-install enable docker
+
+ubuntu@ip-172-31-4-63:~$ docker --version
+Docker version 27.2.1, build 9e34c9b
+
+ubuntu@ip-172-31-4-63:~$ sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '\"' -f 4)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+cut: the delimiter must be a single character
+
+ubuntu@ip-172-31-4-63:~$ sudo chmod +x /usr/local/bin/docker-compose
+
+ubuntu@ip-172-31-4-63:~$ docker --version
+Docker version 27.2.1, build 9e34c9b
+
+ubuntu@ip-172-31-4-63:~$ sudo systemctl status docker
+● docker.service - Docker Application Container Engine
+     Loaded: loaded (/usr/lib/systemd/system/docker.service; enabled; preset: enabled)
+
+ubuntu@ip-172-31-4-63:~$ docker run hello-world
+docker: permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Head "http://%2Fvar%2Frun%2Fdocker.sock/_ping": dial unix /var/run/docker.sock: connect: permission denied.
+
+ubuntu@ip-172-31-4-63:~$ sudo usermod -aG docker $USER
+
+ubuntu@ip-172-31-4-63:~$ groups
+docker adm cdrom sudo dip lxd ubuntu
+
+ubuntu@ip-172-31-4-63:~$ docker run hello-world
+Unable to find image 'hello-world:latest' locally
+Hello from Docker!
+
+ubuntu@ip-172-31-4-63:~$ docker run -d -p 8080:8080 -p 50000:50000 --name jenkins jenkins/jenkins:lts
+Unable to find image 'jenkins/jenkins:lts' locally
+lts: Pulling from jenkins/jenkins
+903681d87777: Pull complete
+
+ubuntu@ip-172-31-4-63:~$ docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+04b04d0033fa41caabbe402683dd739a
+
+jenkins@5b021048d0fc:/$
+
+
+------------------------------------------------------------------------------------------
 
 VS Code se apna code GitHub branch me push karne ke liye tumhe steps follow karne padenge.
 
