@@ -571,14 +571,57 @@ b) Freestyle Project: Yahan aapko build steps manually configure karni hoti hain
 
 Hm Freestyle porject pr work kr rhe jenkins me
 
+VIMP NOTES:- Docker logs command run karne ke liye pehle Docker service ko enable aur start karna zaroori hai.
+means docker me  jenkins run krne ke liye ye sb command use  krna hoga putty open krne ke baad
+
+### Docker Service Management
+
+1. **Enable Docker Service:**
+     sudo systemctl enable docker
+    
+2. **Start Docker Service:**
+     sudo systemctl start docker
+
+3. **Check Docker Service Status:**
+     sudo systemctl status docker
+ 
+4. **Verify Docker Installation:**
+     docker --version
+
+4.5 ** Agar Jenkins container nahi chal raha hai, to start karein**
+     sudo docker start <jenkins_container_id>
+
+5. **List Docker Containers:**
+     sudo docker ps
+
+6. **View Jenkins Container Logs:**
+     sudo docker logs <jenkins_container_id>
+     or
+	 sudo docker logs jenkins
+     
+******
+NOTE:-1. docker ps
+Purpose: **List Docker Containers:**
+     
+2. sudo docker start jenkins
+Purpose: Starts a stopped Docker container named jenkins.
+*****
+
 Step 4:-
 Jenkins Install Using Docker:
+
+NOTE:- if Docker is set up to enable and start automatically on boot, then your Jenkins container will also 
+       automatically 
 
 1) Jenkins Install Command:
 docker run -d -p 8080:8080 -p 50000:50000 --name jenkins jenkins/jenkins:lts
 Yeh command run karne ke baad, Jenkins Docker container background mein run hoga aur Jenkins server start 
 ho jayega.
 
+'''
+NOTE:- Jenkins container is set to restart automatically:
+sudo docker run --name jenkins -d --restart unless-stopped jenkins/jenkins
+'''
 
 2) Jenkins Ko Browser Mein Access Karo:
 http://<your-ec2-public-ip>:8080
@@ -831,6 +874,9 @@ Chalo step by step dekhein kaise `GitHub hook trigger for GITScm polling` setup 
 
 7) Build Environment: Special environment setup agar required ho to.
 
+Jenkins ke Build step me hmne backend ke liye  hi build  command likhe aur  ci cd  configure krege, frontend 
+ke liye hm dockerfile use krege local me
+
 8) Build Steps: Most important section, yaha tum commands likhte ho code ko build karne ke liye.
 
 Jenkins mein frontend aur backend ke build commands ko ek hi file mein ya alag-alag files mein handle karna
@@ -971,9 +1017,8 @@ User Name Password Use TLS pr tick SMTP Port and Reply-To Address fill kra then 
 test e-mail ko tick krke Test e-mail recipient me apna email fill krke test configuration kra isi ke saath 
 saath Add Post-Build Action me Email Notification select kra aur recipients me email fill krke  Send separate
 e-mails to individuals who broke the build  and Send e-mail for every unstable build pr tick kr diya
-
-
-
+ E-mail Notification aur Extended E-mail Notification 2 different plugin hai to 2 mail aayege ek saath
+gamil 2 factor authentication password :- "zkox npea tnlh mbhd"
 
 
 
