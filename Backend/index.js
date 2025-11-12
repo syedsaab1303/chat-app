@@ -4,7 +4,10 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const http = require('http');
 const { Server } = require('socket.io');
-require('dotenv').config();
+const dotenv = require("dotenv");
+
+// 👇 ye sabse pehle load hona chahiye
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
